@@ -11,42 +11,33 @@ if 'saldo' not in st.session_state:
 if 'historico' not in st.session_state:
     st.session_state.historico = []
 
-# --- BARRA LATERAL (ONDE VOCÊ EDITA O SALDO E PREÇO) ---
-st.sidebar.header("⚙️ Painel de Controle")
-
-# Campo para editar o Preço
-preco_vigo = st.sidebar.number_input("Preço da Passagem (R$)", value=5.00, step=0.05)
-
-st.sidebar.divider()
-
-# Campo para Adicionar Recarga (Edita o saldo somando)
-st.sidebar.subheader("💰 Adicionar Recarga")
-valor_recarga = st.sidebar.number_input("Valor da Recarga (R$)", min_value=0.0, step=10.0)
-
-if st.sidebar.button("Confirmar Recarga"):
-    st.session_state.saldo += valor_recarga
-    st.session_state.historico.append({
-        "Data": datetime.now().strftime("%d/%m/%Y %H:%M"),
-        "Tipo": "Recarga",
-        "Valor": f"R$ {valor_recarga:.2f}",
-        "Saldo": f"R$ {st.session_state.saldo:.2f}"
-    })
-    st.sidebar.success("Saldo Atualizado!")
-
 # --- PAINEL PRINCIPAL ---
 st.title("🚌 Controle de Passagens")
 
+# 1. MOSTRADOR (O que você vê destacado na imagem image_9502fd.png)
 col1, col2 = st.columns(2)
 with col1:
     st.metric("Saldo Atual", f"R$ {st.session_state.saldo:.2f}")
 with col2:
+    # Preço padrão para o cálculo das passagens restantes
+    preco_vigo = 5.00 
     restantes = int(st.session_state.saldo // preco_vigo)
     st.metric("Viagens Restantes", restantes)
 
 st.divider()
 
-# REGISTRAR USO
-st.subheader("📍 Registrar Uso")
+# 2. ÁREA DE EDIÇÃO DIRETA (Para mudar o que está destacado acima)
+with st.expander("📝 Editar Saldo ou Preço Manualmente"):
+    # Se você mudar aqui, o destaque lá em cima muda na mesma hora!
+    novo_val = st.number_input("Alterar valor total para:", value=float(st.session_state.saldo), step=1.0)
+    if novo_val != st.session_state.saldo:
+        st.session_state.saldo = novo_val
+        st.rerun()
+
+st.divider()
+
+# 3. REGISTRAR USO RÁPIDO
+st.subheader("📍 Marcar Uso")
 qtd = st.radio("Quantas passagens usou?", [1, 2, 3, 4], index=1, horizontal=True)
 
 if st.button("Confirmar e Descontar"):
@@ -59,11 +50,11 @@ if st.button("Confirmar e Descontar"):
             "Valor": f"- R$ {custo:.2f}",
             "Saldo": f"R$ {st.session_state.saldo:.2f}"
         })
-        st.success("Uso registrado!")
+        st.rerun()
     else:
         st.error("Saldo insuficiente!")
 
-# EXIBIR HISTÓRICO
+# HISTÓRICO
 if st.session_state.historico:
-    with st.expander("Ver Histórico Completo"):
+    with st.expander("📋 Ver Histórico"):
         st.table(pd.DataFrame(st.session_state.historico).iloc[::-1])
