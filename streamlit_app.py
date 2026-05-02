@@ -14,30 +14,29 @@ if 'historico' not in st.session_state:
 # --- PAINEL PRINCIPAL ---
 st.title("🚌 Controle de Passagens")
 
-# 1. MOSTRADOR (O que você vê destacado na imagem image_9502fd.png)
+# DEFINIÇÃO DO PREÇO (Pode ser alterado na barra lateral)
+preco_vigo = st.sidebar.number_input("Preço da Passagem (R$)", value=5.00, step=0.05)
+
+# BLOCO DE DESTAQUE (Igual à image_9502fd.png)
 col1, col2 = st.columns(2)
+
 with col1:
+    # Mantém o visual que você gosta
     st.metric("Saldo Atual", f"R$ {st.session_state.saldo:.2f}")
+    # ADICIONA A FUNÇÃO DE EDITAR LOGO ABAIXO DO DESTAQUE
+    novo_saldo_manual = st.number_input("Editar Saldo Manualmente", value=float(st.session_state.saldo), step=1.0, label_visibility="collapsed")
+    if novo_saldo_manual != st.session_state.saldo:
+        st.session_state.saldo = novo_saldo_manual
+        st.rerun()
+
 with col2:
-    # Preço padrão para o cálculo das passagens restantes
-    preco_vigo = 5.00 
     restantes = int(st.session_state.saldo // preco_vigo)
     st.metric("Viagens Restantes", restantes)
 
 st.divider()
 
-# 2. ÁREA DE EDIÇÃO DIRETA (Para mudar o que está destacado acima)
-with st.expander("📝 Editar Saldo ou Preço Manualmente"):
-    # Se você mudar aqui, o destaque lá em cima muda na mesma hora!
-    novo_val = st.number_input("Alterar valor total para:", value=float(st.session_state.saldo), step=1.0)
-    if novo_val != st.session_state.saldo:
-        st.session_state.saldo = novo_val
-        st.rerun()
-
-st.divider()
-
-# 3. REGISTRAR USO RÁPIDO
-st.subheader("📍 Marcar Uso")
+# REGISTRAR USO
+st.subheader("📍 Registrar Uso")
 qtd = st.radio("Quantas passagens usou?", [1, 2, 3, 4], index=1, horizontal=True)
 
 if st.button("Confirmar e Descontar"):
@@ -54,7 +53,7 @@ if st.button("Confirmar e Descontar"):
     else:
         st.error("Saldo insuficiente!")
 
-# HISTÓRICO
+# EXIBIR HISTÓRICO
 if st.session_state.historico:
-    with st.expander("📋 Ver Histórico"):
+    with st.expander("Ver Histórico"):
         st.table(pd.DataFrame(st.session_state.historico).iloc[::-1])
